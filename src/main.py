@@ -4,9 +4,6 @@ import time
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 
-# Use tensorflow 1 behavior to match the Universal Sentence Encoder
-# examples (https://tfhub.dev/google/universal-sentence-encoder/2).
-import tensorflow as tf
 import tensorflow_hub as hub
 
 ##### INDEXING #####
@@ -16,8 +13,8 @@ def index_data():
     client.indices.delete(index=INDEX_NAME, ignore=[404])
 
     with open(INDEX_FILE) as index_file:
-        source = index_file.read().strip()
-        client.indices.create(index=INDEX_NAME, body=source)
+        index_mapping = json.load(index_file)
+        client.indices.create(index=INDEX_NAME, **index_mapping)
 
     docs = []
     count = 0
@@ -106,8 +103,8 @@ def handle_query():
 ##### EMBEDDING #####
 
 def embed_text(text):
-    vectors = session.run(embeddings, feed_dict={text_ph: text})
-    return [vector.tolist() for vector in vectors]
+    vectors = embed(text)
+    return [vector.numpy().tolist() for vector in vectors]
 
 ##### MAIN SCRIPT #####
 
@@ -120,29 +117,13 @@ if __name__ == '__main__':
 
     SEARCH_SIZE = 5
 
-    GPU_LIMIT = 0.5
-
-    tf.compat.v1.disable_eager_execution()
-
     print("Downloading pre-trained embeddings from tensorflow hub...")
     embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-    text_ph = tf.compat.v1.placeholder(tf.string)
-    embeddings = embed(text_ph)
-    print("Done.")
-
-    print("Creating tensorflow session...")
-    config = tf.compat.v1.ConfigProto()
-    config.gpu_options.per_process_gpu_memory_fraction = GPU_LIMIT
-    session = tf.compat.v1.Session(config=config)
-    session.run(tf.compat.v1.global_variables_initializer())
-    session.run(tf.compat.v1.tables_initializer())
-    print("Done.")
+    print("Model downloaded.")
 
     client = Elasticsearch()
 
     index_data()
     run_query_loop()
 
-    print("Closing tensorflow session...")
-    session.close()
     print("Done.")
