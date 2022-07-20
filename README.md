@@ -46,8 +46,8 @@ python3 src/main.py
 The following queries return good posts near the top position, despite there not being strong term
 overlap between the query and document title:
 - "zipping up files" returns "Compressing / Decompressing Folders & Files"
-- "determine if something is an IP" returns "How do you tell whether a string is an IP or a hostname"
-- "translate bytes to doubles" returns "Convert Bytes to Floating Point Numbers in Python"
+- "determine if something is an IP" returns "How to evaluate an IP?"
+- "translate bytes to doubles" returns "How to cast a number to a byte?"
 
 Note that in other cases, the results can be noisy and unintuitive. For example, "zipping up files" also assigns high scores to "Partial .csproj Files" and "How to avoid .pyc files?".
 
